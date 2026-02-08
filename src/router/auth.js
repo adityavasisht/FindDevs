@@ -12,7 +12,7 @@ authRouter.post("/signup", async (req, res) => {
     try {
         const { firstname, lastname, emailId, password } = req.body;
         
-        // 1. Check if user already exists
+
         const existingUser = await User.findOne({ emailId });
         if (existingUser) return res.status(400).send("Email already registered");
 
@@ -26,7 +26,7 @@ authRouter.post("/signup", async (req, res) => {
         
         await user.save();
 
-        // 2. Send Email (Fire and forget, or handle error separately)
+
         sendEmail(
             user.emailId,
             "Welcome to FindDevs! 🚀",
@@ -36,7 +36,7 @@ authRouter.post("/signup", async (req, res) => {
         res.status(201).send("User created successfully");
         
     } catch (error) {
-        // Log the actual error for you, send a generic one to the user
+
         console.error(error);
         res.status(500).send("Error saving user: " + error.message);
     }
@@ -61,7 +61,7 @@ authRouter.post("/login", async (req, res) => {
     if (!passwordCorrect) {
       return res.status(401).send("invalid credentials");
     }
-    const token = jwt.sign({userId:user._id},'secretkey99');
+    const token = jwt.sign({userId:user._id},process.env.JWT_SECRET);
     res.cookie("token",token);
     res.send("user login successfull");
 

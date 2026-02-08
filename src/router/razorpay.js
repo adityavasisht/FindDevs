@@ -1,54 +1,64 @@
 const express = require("express");
 const Razorpay = require("razorpay");
-const router = express.Router();
+const razorpayRouter = express.Router();
 const crypto = require("crypto");
 const Payment  = require("../models/payment.js");
 const userModel = require("../models/user");
+const { authuser } = require("../middlewares/auth.js");
+require("dotenv").config(); 
 
 
 
 const razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_SECRET
+    key_secret: process.env.RAZORPAY_KEY_SECRET
 });
 
 
 
-router.post("/create", async(req,res)=>{
+razorpayRouter.post("/create", authuser, async (req, res) => {
     try {
+        // 1. SECURITY FIX: Get ID directly from the logged-in user (req.user)
+        // No need to read req.body.userId anymore!
+        const userId = req.user._id; 
 
-        const userId = req.body;
-        
         const options = {
-            amount: "500"*100,
+            amount: 500 * 100, // 500 INR in paise
             currency: "INR",
-            receipt: "receipt_" + Date.now(), 
-        }
+            receipt: "receipt_" + Date.now(),
+        };
 
         const order = await razorpay.orders.create(options);
 
-        const newPayment  = new Payment({
+        // 2. SCHEMA CHECK: Ensure 'userid' matches your Payment Model field name exactly
+        const newPayment = new Payment({
             orderId: order.id,
             amount: order.amount,
             currency: order.currency,
             status: "created",
-            userid: userId
-
-
+            userId: userId // <--- Matches your current code
         });
+
         await newPayment.save();
+
         res.json({
             success: true,
             order: order,
         });
-        
+
     } catch (error) {
-        res.send("order was not created"+ error);
+        console.error("Payment Error:", error); // Log it so you can see it in terminal
         
+        // 3. JSON FIX: Send proper JSON so frontend doesn't crash
+        res.status(500).json({ 
+            success: false, 
+            message: "Order creation failed", 
+            error: error.message 
+        });
     }
 });
 
-router.post("/verify", async(req,res)=>{
+razorpayRouter.post("/verify",authuser, async(req,res)=>{
     
         const {razorpay_order_id, razorpay_payment_id, razorpay_signature} = req.body;
 
@@ -70,7 +80,7 @@ router.post("/verify", async(req,res)=>{
                 payment.status = "earned";
                 await payment.save();
 
-                const user = await userModel.findById(payment.orderId);
+                const user = await userModel.findById(payment.userid);
                 user.isPremium = true;
                 user.membershipType ="premium";
                 user.membershipStartDate = new Date();
@@ -83,7 +93,14 @@ router.post("/verify", async(req,res)=>{
                 });
                 
             } catch (error) {
-                res.status(500).json({ success: false, message: "Payment valid, but DB update failed" });
+                console.log("🛑 DETAILED ERROR:", error); // Logs to your VS Code Terminal
+    
+    res.status(500).json({ 
+        success: false, 
+        message: "Order creation failed",
+        error: error.message,       // <--- Sends simple error message
+        stack: error.stack})
+
                 
             }
 
@@ -96,3 +113,6 @@ router.post("/verify", async(req,res)=>{
         
     
 });
+module.exports={
+    razorpayRouter
+}

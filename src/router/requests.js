@@ -14,8 +14,8 @@ reqRouter.post("/request/send/:status/:toUserId",authuser, async(req,res)=>{
     if(!ALLOWED_STATUS.includes(status)){
         return res.status(400).send("status is not valid");
     }
-    if(fromUserId===toUserId){
-        return res.status(400).res("You cant send req to yourself");
+    if (fromUserId.toString() === toUserId.toString()) {
+        return res.status(400).send("You cant send req to yourself");
     }
     const checkReqValidity = await connectionReq.findOne({
         $or:[
@@ -48,12 +48,11 @@ reqRouter.post("/request/send/:status/:toUserId",authuser, async(req,res)=>{
 reqRouter.post("/request/review/:status/:requestId",authuser, async(req,res)=>{
     try {
         const loggedinUser = req.user;
-        const {status, requestId} = req.params;
+        const { status, requestId } = req.params;
 
-
-        const ALLOWED_STATUS = ["accepted,rejected"];
-        if(!status.includes(ALLOWED_STATUS)){
-            return res.status(400).res("Invalid Status.");
+        const ALLOWED_STATUS = ["accepted","rejected"];
+        if (!ALLOWED_STATUS.includes(status)) {
+            return res.status(400).send("Invalid Status.");
         }
         const connectionRequest = await connectionReq.findOne({
             _id: requestId,

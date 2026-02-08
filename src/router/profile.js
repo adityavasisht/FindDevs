@@ -1,8 +1,8 @@
 const express = require('express');
 const profileRouter = express.Router();
-const {authuser} = require("../middlewares/auth.js")
-const User = require('../models/user.js')
-const validateEditProfileData = require("../utils/validate.js");
+const { authuser } = require("../middlewares/auth.js");
+const User = require('../models/user.js');
+const { validateEditProfileData } = require("../utils/validate.js");
 
 
 profileRouter.get("/profile", authuser,(req,res)=>{
@@ -34,11 +34,17 @@ profileRouter.patch("/update",authuser, async(req,res)=>{
     }
 });
 
-profileRouter.get("/userInfo", async(req,res)=>{
-    const email = req.body.emailId;
-    const user = await User.find ({ email});
-    res.send(user);
-
+profileRouter.get("/userInfo", async (req, res) => {
+    try {
+        const emailId = req.body.emailId;
+        if (!emailId) {
+            return res.status(400).send("emailId is required");
+        }
+        const user = await User.find({ emailId });
+        res.send(user);
+    } catch (error) {
+        res.status(500).send(error);
+    }
 });
 
 module.exports = profileRouter;
