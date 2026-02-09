@@ -18,6 +18,7 @@ const profileRouter = require("./router/profile.js");
 const reqRouter = require("./router/requests.js");
 const { userRouter } = require('./router/user.js');
 const { razorpayRouter } = require('./router/razorpay.js');
+const chatRouter = require('./router/chat.js');
 
 
 app.use(cors({
@@ -35,6 +36,7 @@ app.use("/", profileRouter);
 app.use("/", reqRouter);
 app.use("/", userRouter);
 app.use("/", razorpayRouter);
+app.use("/", chatRouter);
 
 connectDB()
   .then(() => {
