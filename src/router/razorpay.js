@@ -18,25 +18,24 @@ const razorpay = new Razorpay({
 
 razorpayRouter.post("/create", authuser, async (req, res) => {
     try {
-        // 1. SECURITY FIX: Get ID directly from the logged-in user (req.user)
-        // No need to read req.body.userId anymore!
+        
         const userId = req.user._id; 
 
         const options = {
-            amount: 500 * 100, // 500 INR in paise
+            amount: 500 * 100, 
             currency: "INR",
             receipt: "receipt_" + Date.now(),
         };
 
         const order = await razorpay.orders.create(options);
 
-        // 2. SCHEMA CHECK: Ensure 'userid' matches your Payment Model field name exactly
+
         const newPayment = new Payment({
             orderId: order.id,
             amount: order.amount,
             currency: order.currency,
             status: "created",
-            userId: userId // <--- Matches your current code
+            userId: userId 
         });
 
         await newPayment.save();
@@ -47,9 +46,9 @@ razorpayRouter.post("/create", authuser, async (req, res) => {
         });
 
     } catch (error) {
-        console.error("Payment Error:", error); // Log it so you can see it in terminal
+        console.error("Payment Error:", error); 
         
-        // 3. JSON FIX: Send proper JSON so frontend doesn't crash
+
         res.status(500).json({ 
             success: false, 
             message: "Order creation failed", 
@@ -93,12 +92,12 @@ razorpayRouter.post("/verify",authuser, async(req,res)=>{
                 });
                 
             } catch (error) {
-                console.log("🛑 DETAILED ERROR:", error); // Logs to your VS Code Terminal
+                console.log("🛑 DETAILED ERROR:", error); 
     
     res.status(500).json({ 
         success: false, 
         message: "Order creation failed",
-        error: error.message,       // <--- Sends simple error message
+        error: error.message,       
         stack: error.stack})
 
                 
