@@ -1,74 +1,67 @@
-const socket = require("socket.io");
-const { Chat } = require("../models/chat");
+const { Server } = require("socket.io");
+const { Chat } = require("../models/chat"); 
 
 const initializeSocket = (server) => {
-
-  const io = socket(server, {
+  const io = new Server(server, {
     cors: {
-      origin: [
-        "http://localhost:3002",
-        "http://localhost:5173",
-        "https://finddevs.xyz",
-        "https://www.finddevs.xyz",
-        "http://16.171.12.116"
-      ],
+      origin: ["http://localhost:5173", "https://www.finddevs.xyz", "https://finddevs.xyz"],
       methods: ["GET", "POST"],
-      credentials: true
+      credentials: true,
     },
   });
 
-
-
   io.on("connection", (socket) => {
-    console.log("User Connected: " + socket.id);
 
-    socket.on("joinChat", ({ firstName, userId, targetUserId }) => {
-
-      const roomId = [userId, targetUserId].sort().join("_"); 
+    socket.on("joinChat", ({ userId, targetUserId }) => {
+      const roomId = [userId, targetUserId].sort().join("_");
       socket.join(roomId);
-      console.log(firstName + " joined " + roomId);
     });
 
     socket.on("sendMessage", async ({ firstName, lastName, userId, targetUserId, text }) => {
 
+      // 1. Create Room ID
       const roomId = [userId, targetUserId].sort().join("_");
+      console.log("📩 Received Message:", text, "from", userId, "to", targetUserId);
 
+      // 2. SAVE TO MONGODB
       try {
         let chat = await Chat.findOne({
-          participants: { $all: [userId, targetUserId] }
+          participants: { $all: [userId, targetUserId] },
         });
 
         if (!chat) {
+          console.log("⚠️ No existing chat found. Creating new one...");
           chat = new Chat({
             participants: [userId, targetUserId],
-            messages: []
+            messages: [],
           });
         }
 
         chat.messages.push({
           senderId: userId,
-          text: text, 
-        });
-
-        await chat.save();
-
-        io.to(roomId).emit("messageReceived", {
-          firstName,
-          lastName,
-          text,
+          text: text,
           createdAt: new Date(),
         });
 
-      } catch (error) {
-        console.log("Error saving chat: " + error);
+        await chat.save();
+        console.log("✅ Message SAVED to Database!");
+
+      } catch (err) {
+        console.error("❌ DATABASE ERROR:", err);
       }
+
+      // 3. Emit to Client (Real-time)
+      io.to(roomId).emit("messageReceived", {
+        firstName,
+        lastName,
+        text,
+        senderId: userId,
+        createdAt: new Date(),
+      });
     });
-    
-    socket.on("disconnect", () => {
-        console.log("User Disconnected");
-    });
+
+    socket.on("disconnect", () => {});
   });
 };
-
 
 module.exports = initializeSocket;

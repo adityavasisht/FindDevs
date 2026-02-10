@@ -25,7 +25,7 @@ app.use(cors({
   origin: ["http://localhost:5173",
            "http://localhost:3002",
            "https://finddevs.xyz",
-           "https://www.finddevs.xyz",]
+           "https://www.finddevs.xyz",],
   credentials: true,                
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
@@ -34,12 +34,12 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieparser());
 
-app.use("/", authRouter);
-app.use("/", profileRouter);
-app.use("/", reqRouter);
-app.use("/", userRouter);
-app.use("/", razorpayRouter);
-app.use("/", chatRouter);
+app.use("/api", authRouter);
+app.use("/api", profileRouter);
+app.use("/api", reqRouter);
+app.use("/api", userRouter);
+app.use("/api", razorpayRouter);
+app.use("/api", chatRouter);
 
 connectDB()
   .then(() => {
