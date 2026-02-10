@@ -22,7 +22,10 @@ const chatRouter = require('./router/chat.js');
 
 
 app.use(cors({
-  origin: "http://localhost:3002", 
+  origin: ["http://localhost:5173",
+           "http://localhost:3002",
+           "https://finddevs.xyz",
+           "https://www.finddevs.xyz",]
   credentials: true,                
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
