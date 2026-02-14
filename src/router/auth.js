@@ -1,18 +1,15 @@
 const express = require('express');
-
 const authRouter = express.Router();
 const User = require('../models/user.js')
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { sendEmail } = require('../utils/email.js');
 
-
-
 authRouter.post("/signup", async (req, res) => {
     try {
+
         const { firstname, lastname, password } = req.body;
-const emailId = req.body.emailId || req.body.email ;
-        
+        const emailId = req.body.emailId || req.body.email;
 
         const existingUser = await User.findOne({ emailId });
         if (existingUser) return res.status(400).send("Email already registered");
@@ -27,7 +24,6 @@ const emailId = req.body.emailId || req.body.email ;
         
         await user.save();
 
-
         sendEmail(
             user.emailId,
             "Welcome to FindDevs! 🚀",
@@ -37,7 +33,6 @@ const emailId = req.body.emailId || req.body.email ;
         res.status(201).send("User created successfully");
         
     } catch (error) {
-
         console.error(error);
         res.status(500).send("Error saving user: " + error.message);
     }
@@ -47,9 +42,8 @@ authRouter.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ emailId:email });
+    const user = await User.findOne({ emailId: email });
     if (!user) {
-      console.log("USER NOT FOUND");
       return res.status(404).send("user not found");
     }
 
@@ -58,12 +52,17 @@ authRouter.post("/login", async (req, res) => {
       user.password
     );
 
-
     if (!passwordCorrect) {
       return res.status(401).send("invalid credentials");
     }
-    const token = jwt.sign({userId:user._id},process.env.JWT_SECRET);
-    res.cookie("token",token);
+    const token = jwt.sign({userId: user._id}, process.env.JWT_SECRET);
+    
+
+    res.cookie("token", token, {
+        httpOnly: true,
+        secure: true, 
+    });
+    
     res.send("user login successfull");
 
   } catch (error) {
@@ -72,20 +71,18 @@ authRouter.post("/login", async (req, res) => {
   }
 });
 
-authRouter.post("/logout", async (req, res) => {
+
+authRouter.post("/logout", async(req, res) => {
   try {
-
-
     res.cookie("token", "", {
       expires: new Date(0), 
       httpOnly: true,
     });
-
     res.send("logged out successfully!");
   } catch (error) {
     console.error("Logout Error:", error);
-    res.status(500).send("Logout failed: " + error.message);
+    res.status(500).send("Logout failed");
   }
-});
+})
 
 module.exports = authRouter;
