@@ -10,7 +10,8 @@ const { sendEmail } = require('../utils/email.js');
 
 authRouter.post("/signup", async (req, res) => {
     try {
-        const { firstname, lastname, emailId, password } = req.body;
+        const { firstname, lastname, password } = req.body;
+const emailId = req.body.emailId || req.body.email ;
         
 
         const existingUser = await User.findOne({ emailId });
