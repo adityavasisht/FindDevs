@@ -68,9 +68,9 @@ const UserSchema = new mongoose.Schema({
         trim: true,
         default: "https://www.cornwallbusinessawards.co.uk/2018-judging-panel/dummy450x450/",
         validate: {
-            validator: v => validator.isURL(v),
-            message: "your url is not valid."
-        }
+    validator: v => v === "" || validator.isURL(v), // Pass if empty OR valid URL
+    message: "your url is not valid."
+}
     },
     about: {
         type: String,
